@@ -4,6 +4,136 @@
    ============================================ */
 
 /* ============================================
+   CSS VARIABLES - COLOR THEME
+   ============================================ */
+
+:root {
+    /* Primary colors */
+    --primary-color: #0066cc;
+    --primary-hover: #0052a3;
+
+    /* Background colors */
+    --bg-body: #f5f5f5;
+    --bg-container: #ffffff;
+    --bg-secondary: #f9f9f9;
+    --bg-tertiary: #f8f9fa;
+
+    /* Text colors */
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-tertiary: #555;
+
+    /* Border colors */
+    --border-color: #ddd;
+    --border-light: #e0e0e0;
+
+    /* Component colors */
+    --navbar-bg: #0066cc;
+    --navbar-hover: #0052a3;
+    --navbar-text: #ffffff;
+
+    /* Info box colors */
+    --info-bg: #e8f4f8;
+    --info-border: #0066cc;
+
+    /* Code colors */
+    --code-bg: #e8e8e8;
+    --code-box-bg: #f5f5f5;
+
+    /* Table colors */
+    --table-header-bg: #0066cc;
+    --table-header-text: #ffffff;
+    --table-hover: #f5f5f5;
+
+    /* Button colors */
+    --btn-secondary-bg: #6c757d;
+    --btn-secondary-hover: #5a6268;
+    --btn-success-bg: #28a745;
+    --btn-success-hover: #218838;
+
+    /* Alert colors */
+    --note-bg: #fff3cd;
+    --note-border: #ffc107;
+    --success-bg: #e8f5e9;
+    --success-border: #4caf50;
+    --success-text: #2e7d32;
+    --error-bg: #ffebee;
+    --error-border: #c62828;
+    --error-text: #c62828;
+    --embed-bg: #e3f2fd;
+    --embed-border: #2196f3;
+
+    /* Shadow */
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   DARK MODE - SYSTEM PREFERENCE
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Primary colors - slightly lighter for better visibility */
+        --primary-color: #4d9aff;
+        --primary-hover: #66a3ff;
+
+        /* Background colors */
+        --bg-body: #121212;
+        --bg-container: #1e1e1e;
+        --bg-secondary: #252525;
+        --bg-tertiary: #2a2a2a;
+
+        /* Text colors */
+        --text-primary: #e0e0e0;
+        --text-secondary: #b0b0b0;
+        --text-tertiary: #c0c0c0;
+
+        /* Border colors */
+        --border-color: #404040;
+        --border-light: #3a3a3a;
+
+        /* Component colors */
+        --navbar-bg: #1a1a1a;
+        --navbar-hover: #2a2a2a;
+        --navbar-text: #e0e0e0;
+
+        /* Info box colors */
+        --info-bg: #1a2a3a;
+        --info-border: #4d9aff;
+
+        /* Code colors */
+        --code-bg: #2a2a2a;
+        --code-box-bg: #252525;
+
+        /* Table colors */
+        --table-header-bg: #2a3a4a;
+        --table-header-text: #e0e0e0;
+        --table-hover: #252525;
+
+        /* Button colors */
+        --btn-secondary-bg: #4a5158;
+        --btn-secondary-hover: #5a6268;
+        --btn-success-bg: #2d7a3f;
+        --btn-success-hover: #3a9050;
+
+        /* Alert colors */
+        --note-bg: #3a3520;
+        --note-border: #ffc107;
+        --success-bg: #1a3a25;
+        --success-border: #4caf50;
+        --success-text: #66bb6a;
+        --error-bg: #3a1a1a;
+        --error-border: #ef5350;
+        --error-text: #ef5350;
+        --embed-bg: #1a2a3a;
+        --embed-border: #2196f3;
+
+        /* Shadow */
+        --shadow: rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* ============================================
    BASE STYLES
    ============================================ */
 
@@ -11,14 +141,15 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5f5f5;
+    background-color: var(--bg-body);
+    color: var(--text-primary);
 }
 
 /* Navigation Bar */
 .navbar {
-    background-color: #0066cc;
+    background-color: var(--navbar-bg);
     padding: 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 .navbar-container {
@@ -29,7 +160,7 @@ body {
 }
 
 .navbar-brand {
-    color: white;
+    color: var(--navbar-text);
     font-size: 1.2em;
     font-weight: bold;
     padding: 15px 20px;
@@ -37,7 +168,7 @@ body {
 }
 
 .navbar-brand:hover {
-    background-color: #0052a3;
+    background-color: var(--navbar-hover);
 }
 
 .navbar-menu {
@@ -53,14 +184,14 @@ body {
 
 .navbar-menu a {
     display: block;
-    color: white;
+    color: var(--navbar-text);
     padding: 15px 20px;
     text-decoration: none;
     transition: background-color 0.2s;
 }
 
 .navbar-menu a:hover {
-    background-color: #0052a3;
+    background-color: var(--navbar-hover);
 }
 
 /* Container */
@@ -68,27 +199,27 @@ body {
     max-width: 1200px;
     margin: 30px auto;
     padding: 30px;
-    background-color: white;
+    background-color: var(--bg-container);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
 h1 {
-    color: #333;
+    color: var(--text-primary);
 }
 
 h2 {
-    color: #0066cc;
+    color: var(--primary-color);
     margin-top: 30px;
 }
 
 h3 {
-    color: #0066cc;
+    color: var(--primary-color);
     margin-top: 0;
 }
 
 a {
-    color: #0066cc;
+    color: var(--primary-color);
     text-decoration: none;
 }
 
@@ -102,12 +233,12 @@ a:hover {
     margin: 30px auto;
     padding: 20px;
     text-align: center;
-    color: #666;
+    color: var(--text-secondary);
     font-size: 0.9em;
 }
 
 .footer a {
-    color: #0066cc;
+    color: var(--primary-color);
     text-decoration: none;
 }
 
@@ -120,11 +251,11 @@ a:hover {
    ============================================ */
 
 .info-box {
-    background-color: #e8f4f8;
+    background-color: var(--info-bg);
     padding: 20px;
     border-radius: 5px;
     margin: 20px 0;
-    border-left: 4px solid #0066cc;
+    border-left: 4px solid var(--info-border);
 }
 
 .info-box h2 {
@@ -132,14 +263,14 @@ a:hover {
 }
 
 code {
-    background-color: #e8e8e8;
+    background-color: var(--code-bg);
     padding: 2px 6px;
     border-radius: 3px;
     font-family: 'Courier New', monospace;
 }
 
 .code-box {
-    background-color: #f5f5f5;
+    background-color: var(--code-box-bg);
     padding: 15px;
     border-radius: 5px;
     margin: 15px 0;
@@ -155,7 +286,7 @@ code {
 .code-box h3 {
     margin-top: 0;
     font-size: 1em;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 table {
@@ -167,16 +298,16 @@ table {
 th, td {
     padding: 12px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color);
 }
 
 th {
-    background-color: #0066cc;
-    color: white;
+    background-color: var(--table-header-bg);
+    color: var(--table-header-text);
 }
 
 tr:hover {
-    background-color: #f5f5f5;
+    background-color: var(--table-hover);
 }
 
 .btn {
@@ -192,22 +323,22 @@ tr:hover {
 }
 
 .btn-primary {
-    background-color: #0066cc;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--navbar-text);
 }
 
 .btn-primary:hover {
-    background-color: #0052a3;
+    background-color: var(--primary-hover);
     text-decoration: none;
 }
 
 .btn-secondary {
-    background-color: #6c757d;
-    color: white;
+    background-color: var(--btn-secondary-bg);
+    color: var(--navbar-text);
 }
 
 .btn-secondary:hover {
-    background-color: #5a6268;
+    background-color: var(--btn-secondary-hover);
     text-decoration: none;
 }
 
@@ -217,10 +348,10 @@ tr:hover {
 }
 
 .note {
-    background-color: #fff3cd;
+    background-color: var(--note-bg);
     padding: 15px;
     border-radius: 5px;
-    border-left: 4px solid #ffc107;
+    border-left: 4px solid var(--note-border);
     margin: 15px 0;
 }
 
@@ -234,7 +365,7 @@ tr:hover {
 }
 
 .thermometer-container {
-    background-color: #f9f9f9;
+    background-color: var(--bg-secondary);
     padding: 30px;
     border-radius: 8px;
     margin: 20px 0;
@@ -248,7 +379,7 @@ tr:hover {
 }
 
 .last-updated {
-    color: #666;
+    color: var(--text-secondary);
     font-size: 0.9em;
     margin-top: 10px;
 }
@@ -262,7 +393,7 @@ tr:hover {
     gap: 20px;
     margin: 20px 0;
     padding: 15px;
-    background-color: white;
+    background-color: var(--bg-container);
     border-radius: 5px;
 }
 
@@ -271,19 +402,19 @@ tr:hover {
     text-align: center;
     padding: 20px;
     border-radius: 5px;
-    background-color: #f9f9f9;
-    border: 2px solid #e0e0e0;
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--border-light);
 }
 
 .stat-number {
     font-size: 32px;
     font-weight: bold;
-    color: #0066cc;
+    color: var(--primary-color);
 }
 
 .stat-label {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     margin-top: 5px;
 }
 
@@ -294,9 +425,9 @@ tr:hover {
 .embed-section {
     margin: 30px 0;
     padding: 20px;
-    background-color: #e3f2fd;
+    background-color: var(--embed-bg);
     border-radius: 8px;
-    border-left: 5px solid #2196f3;
+    border-left: 5px solid var(--embed-border);
 }
 
 /* ============================================
@@ -310,21 +441,21 @@ tr:hover {
 .faq-item {
     margin: 25px 0;
     padding: 20px;
-    background-color: #f9f9f9;
+    background-color: var(--bg-secondary);
     border-radius: 5px;
-    border-left: 4px solid #0066cc;
+    border-left: 4px solid var(--primary-color);
 }
 
 .faq-question {
     font-size: 1.1em;
     font-weight: bold;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 .faq-answer {
     line-height: 1.6;
-    color: #555;
+    color: var(--text-tertiary);
 }
 
 .faq-answer ul {
@@ -343,7 +474,7 @@ tr:hover {
 .admin-section {
     margin: 30px 0;
     padding: 20px;
-    background-color: #f9f9f9;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
 }
 
@@ -359,22 +490,24 @@ tr:hover {
     display: block;
     font-weight: bold;
     margin-bottom: 5px;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .form-group input[type="password"],
 .form-group input[type="text"] {
     width: 100%;
     padding: 10px;
-    border: 2px solid #ddd;
+    border: 2px solid var(--border-color);
     border-radius: 5px;
     font-size: 14px;
     box-sizing: border-box;
+    background-color: var(--bg-container);
+    color: var(--text-primary);
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: #0066cc;
+    border-color: var(--primary-color);
 }
 
 .file-input-wrapper {
@@ -387,22 +520,23 @@ tr:hover {
 input[type="file"] {
     width: 100%;
     padding: 15px;
-    border: 2px dashed #0066cc;
+    border: 2px dashed var(--primary-color);
     border-radius: 8px;
-    background-color: #f8f9fa;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
     cursor: pointer;
     font-size: 14px;
     transition: all 0.3s ease;
 }
 
 input[type="file"]:hover {
-    background-color: #e3f2fd;
-    border-color: #0052a3;
+    background-color: var(--embed-bg);
+    border-color: var(--primary-hover);
 }
 
 input[type="file"]::file-selector-button {
-    background-color: #0066cc;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--navbar-text);
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -412,12 +546,12 @@ input[type="file"]::file-selector-button {
 }
 
 input[type="file"]::file-selector-button:hover {
-    background-color: #0052a3;
+    background-color: var(--primary-hover);
 }
 
 button {
-    background-color: #28a745;
-    color: white;
+    background-color: var(--btn-success-bg);
+    color: var(--navbar-text);
     padding: 15px 40px;
     border: none;
     border-radius: 5px;
@@ -429,7 +563,7 @@ button {
 }
 
 button:hover:not(:disabled) {
-    background-color: #218838;
+    background-color: var(--btn-success-hover);
 }
 
 button:disabled {
@@ -441,23 +575,23 @@ button:disabled {
     margin: 20px 0;
     padding: 15px;
     border-radius: 5px;
-    border-left: 5px solid #0066cc;
+    border-left: 5px solid var(--primary-color);
 }
 
 .success-box {
-    background-color: #e8f5e9;
-    border-left-color: #4caf50;
-    color: #2e7d32;
+    background-color: var(--success-bg);
+    border-left-color: var(--success-border);
+    color: var(--success-text);
 }
 
 .error-box {
-    background-color: #ffebee;
-    border-left-color: #c62828;
-    color: #c62828;
+    background-color: var(--error-bg);
+    border-left-color: var(--error-border);
+    color: var(--error-text);
 }
 
 .result-box pre {
-    background-color: #f5f5f5;
+    background-color: var(--code-box-bg);
     padding: 10px;
     border-radius: 3px;
     overflow-x: auto;
