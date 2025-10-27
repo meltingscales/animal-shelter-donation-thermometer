@@ -137,14 +137,17 @@ struct ApiDoc;
 
 #[tokio::main]
 async fn main() {
-    // Initialize logging
-    tracing_subscriber::registry()
-        .with(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info"))
-        )
-        .with(tracing_subscriber::fmt::layer().compact())
-        .init();
+    // Initialize logging (disable in Cloud Run to avoid startup issues)
+    // Cloud Run sets K_SERVICE environment variable
+    if std::env::var("K_SERVICE").is_err() {
+        tracing_subscriber::registry()
+            .with(
+                EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| EnvFilter::new("info"))
+            )
+            .with(tracing_subscriber::fmt::layer().compact())
+            .init();
+    }
 
     tracing::info!("Starting Animal Shelter Donation Thermometer server");
 
