@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ - Animal Shelter Donation Thermometer{% endblock %}
+
+{% block content %}
+<h1>Frequently Asked Questions</h1>
+
+<div class="faq-section">
+    <div class="faq-item" style="background-color: #e8f8e8; border-left-color: #28a745;">
+        <div class="faq-question">Q: What is the Animal Shelter Donation Thermometer?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> The Animal Shelter Donation Thermometer is a simple, visual tool that tracks fundraising progress for animal shelter donation campaigns. It generates a thermometer image that updates in real-time as teams reach their fundraising goals.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: How do I embed the thermometer on my website?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> Simply use the image URL provided on the home page. The thermometer is served as a PNG image that can be embedded anywhere using a standard HTML <code>&lt;img&gt;</code> tag:</p>
+            <p><code>&lt;img src="https://your-domain.com/thermometer.png" alt="Donation Thermometer" /&gt;</code></p>
+            <p>The image automatically updates as donation data is refreshed.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: How do I update the donation data?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> There are two ways to update the donation data:</p>
+            <ul>
+                <li><strong>CSV Upload:</strong> Upload a CSV file with team donation data through the admin portal</li>
+                <li><strong>JSON API:</strong> Send a POST request to <code>/admin/config</code> with your updated configuration</li>
+            </ul>
+            <p>Both methods require an authorization key that is provided when the service is deployed.</p>
+        </div>
+    </div>
+
+    <div class="faq-item" style="background-color: #e8f8e8; border-left-color: #28a745;">
+        <div class="faq-question">Q: Is my donation data secure?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> Yes! Your data is secure:</p>
+            <ul>
+                <li><strong>Authentication Required:</strong> All admin operations require an authorization key</li>
+                <li><strong>In-Memory Storage:</strong> Data is stored only in server memory, not on disk</li>
+                <li><strong>No External Logging:</strong> We don't log or share your donation data with third parties</li>
+                <li><strong>Open Source:</strong> The code is open source and can be reviewed on GitHub</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: What format should my CSV file be in?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> Your CSV file should have the following columns:</p>
+            <ul>
+                <li><code>name</code> - The team name</li>
+                <li><code>total_raised</code> - The amount raised by the team (as a number)</li>
+                <li><code>image_url</code> (optional) - A URL to an image for the team</li>
+            </ul>
+            <p>Example:</p>
+            <div class="code-box">
+<pre>name,image_url,total_raised
+Team Alpha,,1500.00
+Team Beta,https://example.com/logo.png,2300.50
+Team Gamma,,1800.00</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: How do I get my authorization key?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> The authorization key is set when the service is deployed. If you're running this service:</p>
+            <ul>
+                <li><strong>From Environment Variable:</strong> Set <code>THERMOMETER_EDIT_KEY</code> before starting the server</li>
+                <li><strong>Auto-Generated:</strong> If not set, a random key will be generated and displayed in the server logs on startup</li>
+            </ul>
+            <p>Keep this key secure and don't share it publicly, as it allows modifications to your thermometer data.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: Can I customize the appearance of the thermometer?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> Currently, the thermometer uses a default appearance. Future versions may include customization options. If you need custom styling, you can modify the source code (it's open source!) or contact the maintainer for feature requests.</p>
+        </div>
+    </div>
+
+    <div class="faq-item" style="background-color: #e3f2fd; border-left-color: #2196f3;">
+        <div class="faq-question">Q: What happens if I update the data while someone is viewing the thermometer?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> The thermometer image is served with cache-control headers that prevent caching. This means:</p>
+            <ul>
+                <li>Browsers will request a fresh image each time the page is loaded</li>
+                <li>Updates appear immediately on next page refresh</li>
+                <li>No stale data is shown to visitors</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">Q: Where can I report bugs or request features?</div>
+        <div class="faq-answer">
+            <p><strong>A:</strong> This is an open-source project! You can:</p>
+            <ul>
+                <li>Report bugs on the <a href="https://github.com/meltingscales/animal-shelter-donation-thermometer/issues" target="_blank" rel="noopener noreferrer">GitHub Issues page</a></li>
+                <li>Submit feature requests through GitHub Issues</li>
+                <li>Contribute code via pull requests</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons">
+    <a href="/" class="btn btn-primary">Back to Home</a>
+    <a href="/admin" class="btn btn-secondary">Admin Portal</a>
+</div>
+{% endblock %}

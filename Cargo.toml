@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 axum = { version = "0.7", features = ["multipart"] }
 tokio = { version = "1.0", features = ["full"] }
-tower-http = { version = "0.5", features = ["trace", "limit"] }
+tower-http = { version = "0.5", features = ["trace", "limit", "fs"] }
 tower = "0.4"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
@@ -15,3 +15,10 @@ serde_json = "1.0"
 csv = "1.3"
 uuid = { version = "1.0", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+askama = "0.12"
+askama_axum = "0.4"
+utoipa = { version = "4.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "6.0", features = ["axum"] }
+firestore = "0.42"
+gcp_auth = "0.12"
+async-trait = "0.1"

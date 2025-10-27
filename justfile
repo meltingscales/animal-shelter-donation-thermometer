@@ -99,3 +99,193 @@ gcp-logs:
 # Get Cloud Run service URL
 gcp-url:
     gcloud run services describe {{SERVICE_NAME}} --region {{GCP_REGION}} --project {{GCP_PROJECT}} --format 'value(status.url)'
+
+# Firestore Setup
+# ===============
+
+# Setup Firestore in GCP project
+firestore-setup:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "Setting up Firestore for project: {{GCP_PROJECT}}"
+
+    # Check if Firestore is already enabled
+    if gcloud firestore databases list --project={{GCP_PROJECT}} 2>/dev/null | grep -q "name:"; then
+        echo "✓ Firestore is already enabled for project {{GCP_PROJECT}}"
+    else
+        echo "Enabling Firestore..."
+        # Create Firestore database in Native mode
+        gcloud firestore databases create \
+            --location={{GCP_REGION}} \
+            --type=firestore-native \
+            --project={{GCP_PROJECT}}
+        echo "✓ Firestore database created"
+    fi
+
+    echo ""
+    echo "Firestore is ready! Your service will automatically use it when GCP_PROJECT is set."
+    echo "Collection name: thermometer_configs"
+    echo "Document ID: current_config"
+
+# Check Firestore status
+firestore-status:
+    @echo "Checking Firestore status for project: {{GCP_PROJECT}}"
+    @gcloud firestore databases list --project={{GCP_PROJECT}} || echo "Firestore not enabled. Run 'just firestore-setup' to enable it."
+
+# View Firestore data (requires firestore emulator or gcloud alpha)
+firestore-view:
+    @echo "To view Firestore data, use the Firebase Console:"
+    @echo "https://console.firebase.google.com/project/{{GCP_PROJECT}}/firestore"
+
+# Delete all Firestore data (DANGEROUS - use with caution)
+firestore-clear:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "⚠️  WARNING: This will delete all data in the thermometer_configs collection!"
+    read -p "Are you sure? (type 'yes' to confirm): " confirm
+    if [ "$confirm" = "yes" ]; then
+        echo "Deleting Firestore data..."
+        gcloud firestore documents delete \
+            --collection thermometer_configs \
+            --document current_config \
+            --project={{GCP_PROJECT}} \
+            --quiet || echo "Document may not exist yet"
+        echo "✓ Firestore data cleared"
+    else
+        echo "Cancelled"
+    fi
+
+# Deploy to Cloud Run with Firestore enabled
+gcp-deploy-firestore: firestore-setup
+    @echo "Deploying to Cloud Run with Firestore enabled..."
+    gcloud run deploy {{SERVICE_NAME}} \
+        --image gcr.io/{{GCP_PROJECT}}/{{SERVICE_NAME}}:latest \
+        --platform managed \
+        --region {{GCP_REGION}} \
+        --allow-unauthenticated \
+        --port 8080 \
+        --set-env-vars "GCP_PROJECT={{GCP_PROJECT}}" \
+        --project {{GCP_PROJECT}}
+    @echo "✓ Service deployed with Firestore integration"
+
+# Complete setup: Build, push, setup Firestore, and deploy
+gcp-setup-all: gcp-push firestore-setup gcp-deploy-firestore
+    @echo ""
+    @echo "✓ Complete setup finished!"
+    @echo ""
+    @echo "Service URL:"
+    @just gcp-url
+
+# Security & Key Management
+# =========================
+
+# Generate a new THERMOMETER_EDIT_KEY (UUID)
+generate-key:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Try different UUID generation methods
+    if command -v uuidgen &> /dev/null; then
+        NEW_KEY=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    elif command -v python3 &> /dev/null; then
+        NEW_KEY=$(python3 -c 'import uuid; print(uuid.uuid4())')
+    else
+        echo "Error: Cannot generate UUID. Please install 'uuidgen' or 'python3'"
+        exit 1
+    fi
+
+    echo "Generated new THERMOMETER_EDIT_KEY:"
+    echo ""
+    echo "  $NEW_KEY"
+    echo ""
+    echo "To use this key locally:"
+    echo "  export THERMOMETER_EDIT_KEY=\"$NEW_KEY\""
+    echo ""
+    echo "To set this key in Cloud Run:"
+    echo "  just set-cloud-key $NEW_KEY"
+
+# Set THERMOMETER_EDIT_KEY in Cloud Run
+set-cloud-key key:
+    @echo "Setting THERMOMETER_EDIT_KEY in Cloud Run..."
+    gcloud run services update {{SERVICE_NAME}} \
+        --update-env-vars "THERMOMETER_EDIT_KEY={{key}}" \
+        --region {{GCP_REGION}} \
+        --project {{GCP_PROJECT}}
+    @echo "✓ Key updated successfully"
+    @echo ""
+    @echo "Save this key securely - you'll need it for admin operations:"
+    @echo "  {{key}}"
+
+# Generate and set a new key in Cloud Run (key rotation)
+rotate-cloud-key:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔄 Rotating THERMOMETER_EDIT_KEY in Cloud Run..."
+    echo ""
+
+    # Generate new key
+    if command -v uuidgen &> /dev/null; then
+        NEW_KEY=$(uuidgen | tr '[:upper:]' '[:lower:]')
+    elif command -v python3 &> /dev/null; then
+        NEW_KEY=$(python3 -c 'import uuid; print(uuid.uuid4())')
+    else
+        echo "Error: Cannot generate UUID. Please install 'uuidgen' or 'python3'"
+        exit 1
+    fi
+
+    echo "Generated new key: $NEW_KEY"
+    echo ""
+    echo "⚠️  WARNING: This will invalidate the old key. Any existing admin sessions will need to use the new key."
+    read -p "Continue? (type 'yes' to confirm): " confirm
+
+    if [ "$confirm" = "yes" ]; then
+        echo ""
+        echo "Updating Cloud Run service..."
+        gcloud run services update {{SERVICE_NAME}} \
+            --update-env-vars "THERMOMETER_EDIT_KEY=$NEW_KEY" \
+            --region {{GCP_REGION}} \
+            --project {{GCP_PROJECT}}
+        echo ""
+        echo "✓ Key rotated successfully!"
+        echo ""
+        echo "🔑 NEW THERMOMETER_EDIT_KEY:"
+        echo "  $NEW_KEY"
+        echo ""
+        echo "⚠️  Save this key securely - the old key is no longer valid!"
+    else
+        echo "Cancelled"
+    fi
+
+# Show current environment variables in Cloud Run (key is hidden by default)
+show-cloud-env:
+    @echo "Current environment variables for {{SERVICE_NAME}}:"
+    @gcloud run services describe {{SERVICE_NAME}} \
+        --region {{GCP_REGION}} \
+        --project {{GCP_PROJECT}} \
+        --format='value(spec.template.spec.containers[0].env)'
+
+# Remove THERMOMETER_EDIT_KEY from Cloud Run (use auto-generated key)
+remove-cloud-key:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "⚠️  WARNING: This will remove the custom key. The service will auto-generate a new one on next restart."
+    echo "You'll need to check the Cloud Run logs to get the new auto-generated key."
+    read -p "Continue? (type 'yes' to confirm): " confirm
+
+    if [ "$confirm" = "yes" ]; then
+        gcloud run services update {{SERVICE_NAME}} \
+            --remove-env-vars THERMOMETER_EDIT_KEY \
+            --region {{GCP_REGION}} \
+            --project {{GCP_PROJECT}}
+        echo ""
+        echo "✓ Custom key removed"
+        echo ""
+        echo "The service will auto-generate a new key on next restart."
+        echo "Check the logs with: just gcp-logs"
+    else
+        echo "Cancelled"
+    fi

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Animal Shelter Donation Thermometer{% endblock %}
+
+{% block content %}
+<h1>{{ organization_name }}</h1>
+<h2 style="margin-top: 0; color: #666;">{{ title }}</h2>
+
+<div class="info-box">
+    <h2>About This Service</h2>
+    <p>
+        This service provides a visual donation progress thermometer for {{ organization_name }} fundraising campaigns.
+        Teams can track their progress toward fundraising goals in real-time with a simple, embedded image.
+    </p>
+</div>
+
+<div class="thermometer-section">
+    <h2>Donation Progress</h2>
+    <div class="thermometer-container">
+        <img src="/thermometer.png" alt="Donation Thermometer" class="thermometer-image">
+    </div>
+    <p class="last-updated">Last updated: {{ last_updated }}</p>
+</div>
+
+<div class="stats-section">
+    <h2>Current Status</h2>
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-number">${{ total_raised }}</div>
+            <div class="stat-label">Total Raised</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">${{ goal }}</div>
+            <div class="stat-label">Goal</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ progress_percent }}%</div>
+            <div class="stat-label">Progress</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ team_count }}</div>
+            <div class="stat-label">Teams</div>
+        </div>
+    </div>
+</div>
+
+{% if team_count > 0 %}
+<div class="teams-section">
+    <h2>Team Breakdown</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Team Name</th>
+                <th>Amount Raised</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for team in teams %}
+            <tr>
+                <td>{{ team.name }}</td>
+                <td>${{ team.total_raised }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="embed-section">
+    <h2>Embed This Thermometer</h2>
+    <p>Use the following code to embed this thermometer on your website:</p>
+    <div class="code-box">
+        <code>&lt;img src="{{ base_url }}/thermometer.png" alt="Donation Thermometer" /&gt;</code>
+    </div>
+    <p class="note">The image updates automatically as donations are recorded.</p>
+</div>
+
+<div class="action-buttons">
+    <a href="/faq" class="btn btn-primary">Learn More</a>
+    <a href="/admin" class="btn btn-secondary">Admin Portal</a>
+</div>
+{% endblock %}

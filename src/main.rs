@@ -1,3 +1,6 @@
+mod storage;
+
+use askama::Template;
 use axum::{
     extract::{Multipart, State},
     http::{HeaderMap, StatusCode},
@@ -6,12 +9,19 @@ use axum::{
     Router,
 };
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use storage::{ConfigStorage, create_storage};
 use tower::ServiceBuilder;
 use tower_http::limit::RequestBodyLimitLayer;
+use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+use utoipa::{OpenApi, ToSchema};
+use utoipa_swagger_ui::SwaggerUi;
 use uuid::Uuid;
+
+// Empty filters module for askama templates
+mod filters {}
 
 // Placeholder PNG data - replace this with your actual thermometer image
 // For now, we'll serve a simple 1x1 transparent PNG
@@ -27,15 +37,16 @@ const THERMOMETER_PNG: &[u8] = &[
     0x42, 0x60, 0x82,
 ];
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 struct Team {
     name: String,
     image_url: Option<String>,
     total_raised: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 struct ThermometerConfig {
+    organization_name: String,
     title: String,
     goal: f64,
     teams: Vec<Team>,
@@ -45,6 +56,7 @@ struct ThermometerConfig {
 impl Default for ThermometerConfig {
     fn default() -> Self {
         Self {
+            organization_name: "Community Animal Rescue Effort".to_string(),
             title: "Animal Shelter Donation Drive".to_string(),
             goal: 10000.0,
             teams: vec![],
@@ -55,20 +67,72 @@ impl Default for ThermometerConfig {
 
 #[derive(Clone)]
 struct AppState {
-    config: Arc<RwLock<ThermometerConfig>>,
+    storage: Arc<dyn ConfigStorage>,
     edit_key: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 struct ErrorResponse {
     error: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 struct SuccessResponse {
     message: String,
     config: ThermometerConfig,
 }
+
+// Template structures for Askama
+#[derive(Template)]
+#[template(path = "home.html")]
+struct HomeTemplate {
+    organization_name: String,
+    title: String,
+    last_updated: String,
+    total_raised: f64,
+    goal: f64,
+    progress_percent: f64,
+    team_count: usize,
+    teams: Vec<Team>,
+    base_url: String,
+}
+
+#[derive(Template)]
+#[template(path = "faq.html")]
+struct FaqTemplate {}
+
+#[derive(Template)]
+#[template(path = "admin.html")]
+struct AdminTemplate {}
+
+// OpenAPI documentation
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        health_check,
+        get_config,
+        upload_csv,
+        update_config,
+    ),
+    components(
+        schemas(
+            Team,
+            ThermometerConfig,
+            ErrorResponse,
+            SuccessResponse,
+        )
+    ),
+    tags(
+        (name = "Public", description = "Public endpoints"),
+        (name = "Admin", description = "Admin endpoints (authentication required)"),
+    ),
+    info(
+        title = "Animal Shelter Donation Thermometer API",
+        version = "1.0.0",
+        description = "API for managing donation thermometer data.\n\n**Authentication:** Admin endpoints require an `Authorization` header with the `THERMOMETER_EDIT_KEY`.",
+    )
+)]
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() {
@@ -94,18 +158,26 @@ async fn main() {
             key
         });
 
+    // Initialize storage (Firestore if GCP_PROJECT is set, otherwise in-memory)
+    let storage = create_storage().await;
+
     let state = AppState {
-        config: Arc::new(RwLock::new(ThermometerConfig::default())),
+        storage,
         edit_key,
     };
 
     let app = Router::new()
-        .route("/", get(root))
+        .route("/", get(home_page))
+        .route("/faq", get(faq_page))
+        .route("/admin", get(admin_page))
+        .route("/admin/sample-csv", get(download_sample_csv))
         .route("/thermometer.png", get(thermometer_image))
         .route("/health", get(health_check))
         .route("/config", get(get_config))
         .route("/admin/upload", post(upload_csv))
         .route("/admin/config", post(update_config))
+        .merge(SwaggerUi::new("/openapi").url("/api-docs/openapi.json", ApiDoc::openapi()))
+        .nest_service("/static", ServeDir::new("static"))
         .with_state(state)
         .layer(
             ServiceBuilder::new()
@@ -155,8 +227,59 @@ async fn shutdown_signal() {
     }
 }
 
-async fn root() -> &'static str {
-    "Animal Shelter Donation Thermometer API\n\nPublic Endpoints:\n- GET /thermometer.png - Donation progress thermometer image\n- GET /config - Current thermometer configuration\n- GET /health - Health check\n\nAdmin Endpoints (require Authorization header with THERMOMETER_EDIT_KEY):\n- POST /admin/upload - Upload CSV with donation data\n- POST /admin/config - Update thermometer configuration (JSON)\n"
+async fn home_page(State(state): State<AppState>) -> Result<HomeTemplate, StatusCode> {
+    let config = state.storage.load_config().await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let total_raised: f64 = config.teams.iter().map(|t| t.total_raised).sum();
+    let progress_percent = if config.goal > 0.0 {
+        (total_raised / config.goal * 100.0).min(100.0)
+    } else {
+        0.0
+    };
+
+    // Get base URL from environment or use default
+    let base_url = std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:8080".to_string());
+
+    Ok(HomeTemplate {
+        organization_name: config.organization_name.clone(),
+        title: config.title.clone(),
+        last_updated: config.last_updated.clone(),
+        total_raised,
+        goal: config.goal,
+        progress_percent,
+        team_count: config.teams.len(),
+        teams: config.teams.clone(),
+        base_url,
+    })
+}
+
+async fn faq_page() -> FaqTemplate {
+    FaqTemplate {}
+}
+
+async fn admin_page() -> AdminTemplate {
+    AdminTemplate {}
+}
+
+async fn download_sample_csv() -> Response {
+    // Create sample CSV data
+    let sample_csv = r#"name,image_url,total_raised
+Team Alpha,https://example.com/alpha.jpg,2500.00
+Team Beta,https://example.com/beta.jpg,3200.50
+Team Gamma,,1800.00
+PUP ALL NIGHT: THE PM PACK,,6987.00
+UnderDogs,https://example.com/underdogs.png,5010.00
+Hairball Wizards,,4101.25"#;
+
+    (
+        [
+            ("Content-Type", "text/csv"),
+            ("Content-Disposition", "attachment; filename=\"sample-teams.csv\""),
+        ],
+        sample_csv,
+    )
+        .into_response()
 }
 
 async fn thermometer_image(State(_state): State<AppState>) -> Response {
@@ -174,13 +297,30 @@ async fn thermometer_image(State(_state): State<AppState>) -> Response {
         .into_response()
 }
 
+#[utoipa::path(
+    get,
+    path = "/health",
+    tag = "Public",
+    responses(
+        (status = 200, description = "Service is healthy")
+    )
+)]
 async fn health_check() -> &'static str {
     "OK"
 }
 
-async fn get_config(State(state): State<AppState>) -> Json<ThermometerConfig> {
-    let config = state.config.read().unwrap();
-    Json(config.clone())
+#[utoipa::path(
+    get,
+    path = "/config",
+    tag = "Public",
+    responses(
+        (status = 200, description = "Current thermometer configuration", body = ThermometerConfig)
+    )
+)]
+async fn get_config(State(state): State<AppState>) -> Result<Json<ThermometerConfig>, StatusCode> {
+    let config = state.storage.load_config().await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Json(config))
 }
 
 fn verify_auth(headers: &HeaderMap, expected_key: &str) -> Result<(), StatusCode> {
@@ -199,6 +339,16 @@ fn verify_auth(headers: &HeaderMap, expected_key: &str) -> Result<(), StatusCode
     Ok(())
 }
 
+#[utoipa::path(
+    post,
+    path = "/admin/upload",
+    tag = "Admin",
+    responses(
+        (status = 200, description = "CSV uploaded successfully", body = SuccessResponse),
+        (status = 401, description = "Unauthorized", body = ErrorResponse),
+        (status = 400, description = "Bad request", body = ErrorResponse)
+    )
+)]
 async fn upload_csv(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -249,10 +399,28 @@ async fn upload_csv(
                 teams.push(team);
             }
 
-            // Update config with new team data
-            let mut config = state.config.write().unwrap();
+            // Load current config and update with new team data
+            let mut config = state.storage.load_config().await.map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ErrorResponse {
+                        error: format!("Failed to load config: {}", e),
+                    }),
+                )
+            })?;
+
             config.teams = teams;
             config.last_updated = chrono::Utc::now().to_rfc3339();
+
+            // Save updated config
+            state.storage.save_config(&config).await.map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ErrorResponse {
+                        error: format!("Failed to save config: {}", e),
+                    }),
+                )
+            })?;
 
             tracing::info!("Updated thermometer config with {} teams", config.teams.len());
 
@@ -271,6 +439,16 @@ async fn upload_csv(
     ))
 }
 
+#[utoipa::path(
+    post,
+    path = "/admin/config",
+    tag = "Admin",
+    request_body = ThermometerConfig,
+    responses(
+        (status = 200, description = "Configuration updated successfully", body = SuccessResponse),
+        (status = 401, description = "Unauthorized", body = ErrorResponse)
+    )
+)]
 async fn update_config(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -287,9 +465,18 @@ async fn update_config(
     })?;
 
     // Update the configuration
-    let mut config = state.config.write().unwrap();
-    *config = new_config;
+    let mut config = new_config;
     config.last_updated = chrono::Utc::now().to_rfc3339();
+
+    // Save updated config
+    state.storage.save_config(&config).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                error: format!("Failed to save config: {}", e),
+            }),
+        )
+    })?;
 
     tracing::info!("Updated thermometer config via JSON");
 

@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Portal - Animal Shelter Donation Thermometer{% endblock %}
+
+{% block content %}
+<h1>Admin Portal</h1>
+
+<div class="info-box" style="background-color: #fff3e0; border-left-color: #ff9800;">
+    <h2>Authentication Required</h2>
+    <p>
+        All admin operations require an authorization key. This key is set via the <code>THERMOMETER_EDIT_KEY</code> environment variable
+        when the service is started. Include this key in the <code>Authorization</code> header of your requests.
+    </p>
+</div>
+
+<div class="admin-section">
+    <h2>Upload CSV Data</h2>
+    <p>Upload a CSV file containing team donation data. The CSV should have the following columns:</p>
+    <ul>
+        <li><code>name</code> - Team name (required)</li>
+        <li><code>total_raised</code> - Amount raised by the team (required, numeric)</li>
+        <li><code>image_url</code> - URL to team image (optional)</li>
+    </ul>
+
+    <div class="code-box">
+        <h3>Sample CSV Format:</h3>
+        <pre>name,image_url,total_raised
+Team Alpha,https://example.com/alpha.jpg,2500.00
+Team Beta,https://example.com/beta.jpg,3200.50
+Team Gamma,,1800.00
+PUP ALL NIGHT: THE PM PACK,,6987.00
+UnderDogs,https://example.com/underdogs.png,5010.00</pre>
+        <p style="margin: 10px 0 0 0;">
+            <a href="/admin/sample-csv" class="btn btn-secondary">Download Sample CSV</a>
+        </p>
+    </div>
+
+    <div class="upload-form">
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="authKey">Authorization Key:</label>
+                <input type="password" id="authKey" name="authKey" required placeholder="Enter your authorization key">
+            </div>
+            <div class="file-input-wrapper">
+                <input type="file" id="csvFile" name="file" accept=".csv" required>
+            </div>
+            <button type="submit" id="uploadButton">Upload CSV</button>
+        </form>
+        <div id="uploadResult" class="result-box" style="display: none;"></div>
+    </div>
+</div>
+
+<div class="admin-section">
+    <h2>Update Configuration (Form)</h2>
+    <p>Update the organization name, campaign title, and goal using this form:</p>
+
+    <div class="upload-form">
+        <form id="configForm">
+            <div class="form-group">
+                <label for="authKeyConfig">Authorization Key:</label>
+                <input type="password" id="authKeyConfig" name="authKeyConfig" required placeholder="Enter your authorization key">
+            </div>
+            <div class="form-group">
+                <label for="orgName">Organization Name:</label>
+                <input type="text" id="orgName" name="orgName" required placeholder="e.g., Community Animal Rescue Effort Skokie">
+            </div>
+            <div class="form-group">
+                <label for="campaignTitle">Campaign Title:</label>
+                <input type="text" id="campaignTitle" name="campaignTitle" required placeholder="e.g., Annual Fundraising Drive 2025">
+            </div>
+            <div class="form-group">
+                <label for="goalAmount">Goal Amount ($):</label>
+                <input type="number" id="goalAmount" name="goalAmount" required min="0" step="0.01" placeholder="e.g., 10000">
+            </div>
+            <button type="submit" id="configButton">Update Configuration</button>
+        </form>
+        <div id="configResult" class="result-box" style="display: none;"></div>
+    </div>
+</div>
+
+<div class="admin-section">
+    <h2>Update Configuration (JSON)</h2>
+    <p>Alternatively, you can update the configuration directly using JSON. This allows you to set the organization name, title, goal, and team data programmatically.</p>
+
+    <div class="code-box">
+        <h3>Example JSON Configuration:</h3>
+        <pre>{
+  "organization_name": "Community Animal Rescue Effort Skokie",
+  "title": "Annual Fundraising Drive 2025",
+  "goal": 10000.0,
+  "teams": [
+    {
+      "name": "Team Alpha",
+      "image_url": null,
+      "total_raised": 2500.0
+    },
+    {
+      "name": "Team Beta",
+      "image_url": "https://example.com/logo.png",
+      "total_raised": 3200.0
+    }
+  ],
+  "last_updated": "2025-10-27T00:00:00Z"
+}</pre>
+    </div>
+
+    <div class="code-box">
+        <h3>Example API Request:</h3>
+        <pre>curl -X POST https://your-domain.com/admin/config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_KEY_HERE" \
+  -d '{
+    "title": "Animal Shelter Donation Drive",
+    "goal": 10000.0,
+    "teams": [...]
+  }'</pre>
+    </div>
+</div>
+
+<div class="admin-section">
+    <h2>Current Configuration</h2>
+    <button id="loadConfigButton" class="btn btn-secondary">Load Current Config</button>
+    <div id="configDisplay" class="result-box" style="display: none;">
+        <pre id="configContent"></pre>
+    </div>
+</div>
+
+<div class="admin-section">
+    <h2>API Endpoints</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Endpoint</th>
+                <th>Method</th>
+                <th>Description</th>
+                <th>Auth Required</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/config</code></td>
+                <td>GET</td>
+                <td>Get current configuration</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td><code>/admin/upload</code></td>
+                <td>POST</td>
+                <td>Upload CSV file</td>
+                <td>Yes</td>
+            </tr>
+            <tr>
+                <td><code>/admin/config</code></td>
+                <td>POST</td>
+                <td>Update configuration (JSON)</td>
+                <td>Yes</td>
+            </tr>
+            <tr>
+                <td><code>/thermometer.png</code></td>
+                <td>GET</td>
+                <td>Get thermometer image</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td><code>/health</code></td>
+                <td>GET</td>
+                <td>Health check</td>
+                <td>No</td>
+            </tr>
+        </tbody>
+    </table>
+    <p class="note">For detailed API documentation, see the <a href="/openapi">OpenAPI specification</a>.</p>
+</div>
+
+<div class="action-buttons">
+    <a href="/" class="btn btn-primary">Back to Home</a>
+    <a href="/faq" class="btn btn-secondary">View FAQ</a>
+</div>
+
+<script>
+    // Config Form Handler
+    document.getElementById('configForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const authKey = document.getElementById('authKeyConfig').value;
+        const orgName = document.getElementById('orgName').value;
+        const campaignTitle = document.getElementById('campaignTitle').value;
+        const goalAmount = parseFloat(document.getElementById('goalAmount').value);
+        const resultBox = document.getElementById('configResult');
+        const configButton = document.getElementById('configButton');
+
+        configButton.disabled = true;
+        configButton.textContent = 'Updating...';
+
+        try {
+            // First, get current config to preserve teams
+            const currentResponse = await fetch('/config');
+            const currentConfig = await currentResponse.json();
+
+            // Update with new values
+            const updatedConfig = {
+                ...currentConfig,
+                organization_name: orgName,
+                title: campaignTitle,
+                goal: goalAmount
+            };
+
+            const response = await fetch('/admin/config', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedConfig)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                resultBox.style.display = 'block';
+                resultBox.className = 'result-box success-box';
+                resultBox.innerHTML = `<strong>Success!</strong><br>${data.message}<br>Page will reload in 2 seconds...`;
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                resultBox.style.display = 'block';
+                resultBox.className = 'result-box error-box';
+                resultBox.innerHTML = `<strong>Error:</strong><br>${data.error}`;
+            }
+        } catch (error) {
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box error-box';
+            resultBox.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+        } finally {
+            configButton.disabled = false;
+            configButton.textContent = 'Update Configuration';
+        }
+    });
+
+    // CSV Upload Form Handler
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const authKey = document.getElementById('authKey').value;
+        const fileInput = document.getElementById('csvFile');
+        const file = fileInput.files[0];
+        const resultBox = document.getElementById('uploadResult');
+        const uploadButton = document.getElementById('uploadButton');
+
+        if (!file) {
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box error-box';
+            resultBox.textContent = 'Please select a CSV file';
+            return;
+        }
+
+        uploadButton.disabled = true;
+        uploadButton.textContent = 'Uploading...';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/admin/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authKey}`
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                resultBox.style.display = 'block';
+                resultBox.className = 'result-box success-box';
+                resultBox.innerHTML = `<strong>Success!</strong><br>${data.message}<br>Teams updated: ${data.config.teams.length}`;
+                fileInput.value = '';
+            } else {
+                resultBox.style.display = 'block';
+                resultBox.className = 'result-box error-box';
+                resultBox.innerHTML = `<strong>Error:</strong><br>${data.error}`;
+            }
+        } catch (error) {
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box error-box';
+            resultBox.innerHTML = `<strong>Error:</strong><br>${error.message}`;
+        } finally {
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Upload CSV';
+        }
+    });
+
+    // Load Current Config Handler
+    document.getElementById('loadConfigButton').addEventListener('click', async () => {
+        const configDisplay = document.getElementById('configDisplay');
+        const configContent = document.getElementById('configContent');
+        const loadButton = document.getElementById('loadConfigButton');
+
+        loadButton.disabled = true;
+        loadButton.textContent = 'Loading...';
+
+        try {
+            const response = await fetch('/config');
+            const data = await response.json();
+
+            configContent.textContent = JSON.stringify(data, null, 2);
+            configDisplay.style.display = 'block';
+            configDisplay.className = 'result-box';
+        } catch (error) {
+            configContent.textContent = `Error loading configuration: ${error.message}`;
+            configDisplay.style.display = 'block';
+            configDisplay.className = 'result-box error-box';
+        } finally {
+            loadButton.disabled = false;
+            loadButton.textContent = 'Load Current Config';
+        }
+    });
+</script>
+{% endblock %}

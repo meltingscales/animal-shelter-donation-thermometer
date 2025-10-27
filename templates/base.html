@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            {% block title %}Animal Shelter Donation Thermometer{%
+            endblock %}
+        </title>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="/" class="navbar-brand"
+                    >Animal Shelter Donation Thermometer</a
+                >
+                <ul class="navbar-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/faq">FAQ</a></li>
+                    <li><a href="/admin">Admin Portal</a></li>
+                    <li><a href="/openapi">OpenAPI</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container">{% block content %}{% endblock %}</div>
+        <div class="footer">
+            <p>
+                Animal Shelter Donation Thermometer |
+                <a
+                    href="https://github.com/meltingscales/animal-shelter-donation-thermometer"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >View on GitHub</a
+                >
+            </p>
+        </div>
+    </body>
+</html>
