@@ -22,3 +22,6 @@ utoipa-swagger-ui = { version = "6.0", features = ["axum"] }
 firestore = "0.42"
 gcp_auth = "0.12"
 async-trait = "0.1"
+resvg = "0.44"
+usvg = "0.44"
+tiny-skia = "0.11"

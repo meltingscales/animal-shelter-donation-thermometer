@@ -315,5 +315,24 @@ UnderDogs,https://example.com/underdogs.png,5010.00</pre>
             loadButton.textContent = 'Load Current Config';
         }
     });
+
+    // Auto-fill configuration form with existing data on page load
+    async function loadCurrentConfigIntoForm() {
+        try {
+            const response = await fetch('/config');
+            const data = await response.json();
+
+            // Populate form fields with current values
+            document.getElementById('orgName').value = data.organization_name || '';
+            document.getElementById('campaignTitle').value = data.title || '';
+            document.getElementById('goalAmount').value = data.goal || '';
+        } catch (error) {
+            console.error('Failed to load current configuration:', error);
+            // Form will remain empty if loading fails
+        }
+    }
+
+    // Load config when page loads
+    loadCurrentConfigIntoForm();
 </script>
 {% endblock %}

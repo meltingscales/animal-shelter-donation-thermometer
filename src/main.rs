@@ -1,8 +1,9 @@
 mod storage;
+mod thermometer;
 
 use askama::Template;
 use axum::{
-    extract::{Multipart, State},
+    extract::{Multipart, Query, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Json, Response},
     routing::{get, post},
@@ -11,6 +12,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use storage::{ConfigStorage, create_storage};
+use thermometer::{generate_thermometer_svg, svg_to_png};
 use tower::ServiceBuilder;
 use tower_http::limit::RequestBodyLimitLayer;
 use tower_http::services::ServeDir;
@@ -23,19 +25,16 @@ use uuid::Uuid;
 // Empty filters module for askama templates
 mod filters {}
 
-// Placeholder PNG data - replace this with your actual thermometer image
-// For now, we'll serve a simple 1x1 transparent PNG
-const THERMOMETER_PNG: &[u8] = &[
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
-    0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 dimensions
-    0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
-    0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, // IDAT chunk
-    0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
-    0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00,
-    0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, // IEND chunk
-    0x42, 0x60, 0x82,
-];
+// Query parameters for thermometer image
+#[derive(Debug, Deserialize)]
+struct ThermometerQuery {
+    #[serde(default = "default_scale")]
+    scale: f32,
+}
+
+fn default_scale() -> f32 {
+    1.0
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 struct Team {
@@ -172,6 +171,7 @@ async fn main() {
         .route("/admin", get(admin_page))
         .route("/admin/sample-csv", get(download_sample_csv))
         .route("/thermometer.png", get(thermometer_image))
+        .route("/thermometer.svg", get(thermometer_svg))
         .route("/health", get(health_check))
         .route("/config", get(get_config))
         .route("/admin/upload", post(upload_csv))
@@ -282,9 +282,77 @@ Hairball Wizards,,4101.25"#;
         .into_response()
 }
 
-async fn thermometer_image(State(_state): State<AppState>) -> Response {
-    // TODO: Generate actual thermometer image based on _state.config
-    // For now, return placeholder PNG
+async fn thermometer_svg(State(state): State<AppState>) -> Response {
+    // Load configuration
+    let config = match state.storage.load_config().await {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            tracing::error!("Failed to load config for thermometer: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to load configuration",
+            )
+                .into_response();
+        }
+    };
+
+    // Base width for the thermometer
+    let base_width = 800u32;
+
+    // Generate SVG
+    let svg = generate_thermometer_svg(&config, base_width);
+
+    (
+        [
+            ("Content-Type", "image/svg+xml"),
+            ("Cache-Control", "no-cache, no-store, must-revalidate"),
+            ("Pragma", "no-cache"),
+            ("Expires", "0"),
+        ],
+        svg,
+    )
+        .into_response()
+}
+
+async fn thermometer_image(
+    State(state): State<AppState>,
+    Query(params): Query<ThermometerQuery>,
+) -> Response {
+    // Load configuration
+    let config = match state.storage.load_config().await {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            tracing::error!("Failed to load config for thermometer: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to load configuration",
+            )
+                .into_response();
+        }
+    };
+
+    // Validate scale parameter (between 0.1 and 5.0)
+    let scale = params.scale.max(0.1).min(5.0);
+
+    // Base width for the thermometer (will be scaled)
+    let base_width = 800u32;
+
+    // Generate SVG
+    let svg = generate_thermometer_svg(&config, base_width);
+
+    // Convert SVG to PNG
+    let png_data = match svg_to_png(&svg, scale) {
+        Ok(data) => data,
+        Err(e) => {
+            tracing::error!("Failed to render thermometer PNG: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to render thermometer image",
+            )
+                .into_response();
+        }
+    };
+
     (
         [
             ("Content-Type", "image/png"),
@@ -292,7 +360,7 @@ async fn thermometer_image(State(_state): State<AppState>) -> Response {
             ("Pragma", "no-cache"),
             ("Expires", "0"),
         ],
-        THERMOMETER_PNG,
+        png_data,
     )
         .into_response()
 }
