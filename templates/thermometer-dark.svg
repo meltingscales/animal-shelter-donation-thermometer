@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="{{ width }}" height="{{ height }}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="stripes" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+      <rect width="5" height="10" fill="#B8A8D9"/>
+      <rect x="5" width="5" height="10" fill="#D4C8E8"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="{{ width }}" height="{{ height }}" fill="#1a1a1a"/>
+
+  <!-- Title -->
+  <text x="{{ title_x }}" y="{{ title_y }}" font-family="DejaVu Sans" font-size="{{ title_font_size }}" font-weight="bold" fill="#E0E0E0" text-anchor="middle">
+    Our Goal
+  </text>
+
+  <!-- Thermometer Tube Border -->
+  <rect x="{{ tube_x }}" y="{{ tube_y }}" width="{{ tube_width }}" height="{{ tube_height }}"
+        fill="#2a2a2a" stroke="#9B9B9B" stroke-width="3" rx="10"/>
+
+  <!-- Thermometer Fill -->
+  <rect x="{{ fill_x }}" y="{{ fill_y }}" width="{{ fill_width }}" height="{{ fill_height }}"
+        fill="url(#stripes)" rx="10"/>
+
+  <!-- Thermometer Bulb Border -->
+  <circle cx="{{ bulb_center_x }}" cy="{{ bulb_center_y }}" r="{{ bulb_radius }}"
+          fill="#2a2a2a" stroke="#9B9B9B" stroke-width="3"/>
+
+  <!-- Thermometer Bulb Fill -->
+  <circle cx="{{ bulb_center_x }}" cy="{{ bulb_center_y }}" r="{{ bulb_fill_radius }}"
+          fill="url(#stripes)"/>
+
+  <!-- Percentage Markers -->
+  {% for marker in percentage_markers %}
+  <line x1="{{ marker.line_x1 }}" y1="{{ marker.y }}" x2="{{ marker.line_x2 }}" y2="{{ marker.y }}" stroke="#AAAAAA" stroke-width="2"/>
+  <text x="{{ marker.text_x }}" y="{{ marker.text_y }}" font-family="DejaVu Sans" font-size="{{ marker.font_size }}" fill="#AAAAAA" text-anchor="end">{{ marker.percentage }}%</text>
+  {% endfor %}
+
+  <!-- Achieved Amount -->
+  <text x="{{ text_x }}" y="{{ achieved_y }}" font-family="DejaVu Sans" font-size="{{ amount_font_size }}" font-weight="bold" fill="#D4C8E8" text-anchor="middle">
+    ${{ achieved_amount }}
+  </text>
+  <text x="{{ text_x }}" y="{{ achieved_label_y }}" font-family="DejaVu Sans" font-size="{{ label_font_size }}" fill="#AAAAAA" text-anchor="middle">
+    achieved
+  </text>
+
+  <!-- Goal Amount -->
+  <text x="{{ text_x }}" y="{{ goal_y }}" font-family="DejaVu Sans" font-size="{{ amount_font_size }}" font-weight="bold" fill="#E0E0E0" text-anchor="middle">
+    ${{ goal_amount }}
+  </text>
+  <text x="{{ text_x }}" y="{{ goal_label_y }}" font-family="DejaVu Sans" font-size="{{ label_font_size }}" fill="#AAAAAA" text-anchor="middle">
+    goal
+  </text>
+
+  <!-- Progress Percentage -->
+  <text x="{{ text_x }}" y="{{ percent_y }}" font-family="DejaVu Sans" font-size="{{ percent_font_size }}" font-weight="bold" fill="#D4C8E8" text-anchor="middle">
+    {{ progress_percent }}%
+  </text>
+  <text x="{{ text_x }}" y="{{ percent_label_y }}" font-family="DejaVu Sans" font-size="{{ percent_label_font_size }}" fill="#AAAAAA" text-anchor="middle">
+    of your goal reached
+  </text>
+</svg>

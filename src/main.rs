@@ -170,8 +170,10 @@ async fn main() {
         .route("/faq", get(faq_page))
         .route("/admin", get(admin_page))
         .route("/admin/sample-csv", get(download_sample_csv))
-        .route("/thermometer.png", get(thermometer_image))
-        .route("/thermometer.svg", get(thermometer_svg))
+        .route("/thermometer-light.png", get(thermometer_light_image))
+        .route("/thermometer-light.svg", get(thermometer_light_svg))
+        .route("/thermometer-dark.png", get(thermometer_dark_image))
+        .route("/thermometer-dark.svg", get(thermometer_dark_svg))
         .route("/health", get(health_check))
         .route("/config", get(get_config))
         .route("/admin/upload", post(upload_csv))
@@ -282,7 +284,7 @@ Hairball Wizards,,4101.25"#;
         .into_response()
 }
 
-async fn thermometer_svg(State(state): State<AppState>) -> Response {
+async fn thermometer_light_svg(State(state): State<AppState>) -> Response {
     // Load configuration
     let config = match state.storage.load_config().await {
         Ok(cfg) => cfg,
@@ -300,7 +302,7 @@ async fn thermometer_svg(State(state): State<AppState>) -> Response {
     let base_width = 800u32;
 
     // Generate SVG
-    let svg = generate_thermometer_svg(&config, base_width);
+    let svg = generate_thermometer_svg(&config, base_width, false);
 
     (
         [
@@ -314,7 +316,39 @@ async fn thermometer_svg(State(state): State<AppState>) -> Response {
         .into_response()
 }
 
-async fn thermometer_image(
+async fn thermometer_dark_svg(State(state): State<AppState>) -> Response {
+    // Load configuration
+    let config = match state.storage.load_config().await {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            tracing::error!("Failed to load config for thermometer: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to load configuration",
+            )
+                .into_response();
+        }
+    };
+
+    // Base width for the thermometer
+    let base_width = 800u32;
+
+    // Generate SVG
+    let svg = generate_thermometer_svg(&config, base_width, true);
+
+    (
+        [
+            ("Content-Type", "image/svg+xml"),
+            ("Cache-Control", "no-cache, no-store, must-revalidate"),
+            ("Pragma", "no-cache"),
+            ("Expires", "0"),
+        ],
+        svg,
+    )
+        .into_response()
+}
+
+async fn thermometer_light_image(
     State(state): State<AppState>,
     Query(params): Query<ThermometerQuery>,
 ) -> Response {
@@ -338,7 +372,58 @@ async fn thermometer_image(
     let base_width = 800u32;
 
     // Generate SVG
-    let svg = generate_thermometer_svg(&config, base_width);
+    let svg = generate_thermometer_svg(&config, base_width, false);
+
+    // Convert SVG to PNG
+    let png_data = match svg_to_png(&svg, scale) {
+        Ok(data) => data,
+        Err(e) => {
+            tracing::error!("Failed to render thermometer PNG: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to render thermometer image",
+            )
+                .into_response();
+        }
+    };
+
+    (
+        [
+            ("Content-Type", "image/png"),
+            ("Cache-Control", "no-cache, no-store, must-revalidate"),
+            ("Pragma", "no-cache"),
+            ("Expires", "0"),
+        ],
+        png_data,
+    )
+        .into_response()
+}
+
+async fn thermometer_dark_image(
+    State(state): State<AppState>,
+    Query(params): Query<ThermometerQuery>,
+) -> Response {
+    // Load configuration
+    let config = match state.storage.load_config().await {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            tracing::error!("Failed to load config for thermometer: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to load configuration",
+            )
+                .into_response();
+        }
+    };
+
+    // Validate scale parameter (between 0.1 and 5.0)
+    let scale = params.scale.max(0.1).min(5.0);
+
+    // Base width for the thermometer (will be scaled)
+    let base_width = 800u32;
+
+    // Generate SVG
+    let svg = generate_thermometer_svg(&config, base_width, true);
 
     // Convert SVG to PNG
     let png_data = match svg_to_png(&svg, scale) {

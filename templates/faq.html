@@ -6,7 +6,7 @@
 <h1>Frequently Asked Questions</h1>
 
 <div class="faq-section">
-    <div class="faq-item" style="background-color: #e8f8e8; border-left-color: #28a745;">
+    <div class="faq-item">
         <div class="faq-question">Q: What is the Animal Shelter Donation Thermometer?</div>
         <div class="faq-answer">
             <p><strong>A:</strong> The Animal Shelter Donation Thermometer is a simple, visual tool that tracks fundraising progress for animal shelter donation campaigns. It generates a thermometer image that updates in real-time as teams reach their fundraising goals.</p>
@@ -16,9 +16,12 @@
     <div class="faq-item">
         <div class="faq-question">Q: How do I embed the thermometer on my website?</div>
         <div class="faq-answer">
-            <p><strong>A:</strong> Simply use the image URL provided on the home page. The thermometer is served as a PNG image that can be embedded anywhere using a standard HTML <code>&lt;img&gt;</code> tag:</p>
-            <p><code>&lt;img src="https://your-domain.com/thermometer.png" alt="Donation Thermometer" /&gt;</code></p>
-            <p>The image automatically updates as donation data is refreshed.</p>
+            <p><strong>A:</strong> Simply use the image URL provided on the home page. The thermometer is served as a PNG or SVG image that can be embedded anywhere using a standard HTML <code>&lt;img&gt;</code> tag:</p>
+            <p><strong>Light Mode:</strong></p>
+            <p><code>&lt;img src="https://your-domain.com/thermometer-light.png" alt="Donation Thermometer" /&gt;</code></p>
+            <p><strong>Dark Mode:</strong></p>
+            <p><code>&lt;img src="https://your-domain.com/thermometer-dark.png" alt="Donation Thermometer" /&gt;</code></p>
+            <p>The image automatically updates as donation data is refreshed. Both PNG and SVG formats are available (use <code>thermometer-light.svg</code> or <code>thermometer-dark.svg</code>).</p>
         </div>
     </div>
 
@@ -34,7 +37,7 @@
         </div>
     </div>
 
-    <div class="faq-item" style="background-color: #e8f8e8; border-left-color: #28a745;">
+    <div class="faq-item">
         <div class="faq-question">Q: Is my donation data secure?</div>
         <div class="faq-answer">
             <p><strong>A:</strong> Yes! Your data is secure:</p>
@@ -85,7 +88,7 @@ Team Gamma,,1800.00</pre>
         </div>
     </div>
 
-    <div class="faq-item" style="background-color: #e3f2fd; border-left-color: #2196f3;">
+    <div class="faq-item">
         <div class="faq-question">Q: What happens if I update the data while someone is viewing the thermometer?</div>
         <div class="faq-answer">
             <p><strong>A:</strong> The thermometer image is served with cache-control headers that prevent caching. This means:</p>

@@ -2,8 +2,45 @@ use askama::Template;
 use crate::ThermometerConfig;
 
 #[derive(Template)]
-#[template(path = "thermometer.svg")]
-struct ThermometerTemplate {
+#[template(path = "thermometer-light.svg")]
+struct ThermometerLightTemplate {
+    width: u32,
+    height: u32,
+    title_x: String,
+    title_y: String,
+    title_font_size: String,
+    tube_x: String,
+    tube_y: String,
+    tube_width: String,
+    tube_height: String,
+    fill_x: String,
+    fill_y: String,
+    fill_width: String,
+    fill_height: String,
+    bulb_center_x: String,
+    bulb_center_y: String,
+    bulb_radius: String,
+    bulb_fill_radius: String,
+    percentage_markers: Vec<PercentageMarker>,
+    text_x: String,
+    achieved_y: String,
+    achieved_amount: String,
+    achieved_label_y: String,
+    goal_y: String,
+    goal_amount: String,
+    goal_label_y: String,
+    percent_y: String,
+    progress_percent: String,
+    percent_label_y: String,
+    amount_font_size: String,
+    label_font_size: String,
+    percent_font_size: String,
+    percent_label_font_size: String,
+}
+
+#[derive(Template)]
+#[template(path = "thermometer-dark.svg")]
+struct ThermometerDarkTemplate {
     width: u32,
     height: u32,
     title_x: String,
@@ -50,7 +87,7 @@ struct PercentageMarker {
 }
 
 /// Generate an SVG thermometer image based on the configuration
-pub fn generate_thermometer_svg(config: &ThermometerConfig, width: u32) -> String {
+pub fn generate_thermometer_svg(config: &ThermometerConfig, width: u32, dark_mode: bool) -> String {
     let total_raised: f64 = config.teams.iter().map(|t| t.total_raised).sum();
     let progress_percent = if config.goal > 0.0 {
         ((total_raised / config.goal) * 100.0).min(100.0)
@@ -109,45 +146,87 @@ pub fn generate_thermometer_svg(config: &ThermometerConfig, width: u32) -> Strin
         })
         .collect();
 
-    let template = ThermometerTemplate {
-        width,
-        height,
-        title_x: format!("{:.2}", width as f64 / 2.0),
-        title_y: format!("{:.2}", title_y),
-        title_font_size: format!("{:.2}", width as f64 * 0.035),
-        tube_x: format!("{:.2}", tube_x),
-        tube_y: format!("{:.2}", tube_y),
-        tube_width: format!("{:.2}", tube_width),
-        tube_height: format!("{:.2}", tube_height),
-        fill_x: format!("{:.2}", tube_x + 2.5),
-        fill_y: format!("{:.2}", fill_y),
-        fill_width: format!("{:.2}", tube_width - 5.0),
-        fill_height: format!("{:.2}", fill_height),
-        bulb_center_x: format!("{:.2}", bulb_center_x),
-        bulb_center_y: format!("{:.2}", bulb_center_y),
-        bulb_radius: format!("{:.2}", bulb_radius),
-        bulb_fill_radius: format!("{:.2}", bulb_radius - 3.0),
-        percentage_markers,
-        text_x: format!("{:.2}", text_x),
-        achieved_y: format!("{:.2}", achieved_y),
-        achieved_amount: format!("{:.2}", total_raised),
-        achieved_label_y: format!("{:.2}", achieved_y + width as f64 * 0.03),
-        goal_y: format!("{:.2}", goal_y),
-        goal_amount: format!("{:.2}", config.goal),
-        goal_label_y: format!("{:.2}", goal_y + width as f64 * 0.03),
-        percent_y: format!("{:.2}", percent_y),
-        progress_percent: format!("{:.0}", progress_percent),
-        percent_label_y: format!("{:.2}", percent_y + width as f64 * 0.025),
-        amount_font_size: format!("{:.2}", width as f64 * 0.06),
-        label_font_size: format!("{:.2}", width as f64 * 0.025),
-        percent_font_size: format!("{:.2}", width as f64 * 0.09),
-        percent_label_font_size: format!("{:.2}", width as f64 * 0.022),
-    };
+    if dark_mode {
+        let template = ThermometerDarkTemplate {
+            width,
+            height,
+            title_x: format!("{:.2}", width as f64 / 2.0),
+            title_y: format!("{:.2}", title_y),
+            title_font_size: format!("{:.2}", width as f64 * 0.035),
+            tube_x: format!("{:.2}", tube_x),
+            tube_y: format!("{:.2}", tube_y),
+            tube_width: format!("{:.2}", tube_width),
+            tube_height: format!("{:.2}", tube_height),
+            fill_x: format!("{:.2}", tube_x + 2.5),
+            fill_y: format!("{:.2}", fill_y),
+            fill_width: format!("{:.2}", tube_width - 5.0),
+            fill_height: format!("{:.2}", fill_height),
+            bulb_center_x: format!("{:.2}", bulb_center_x),
+            bulb_center_y: format!("{:.2}", bulb_center_y),
+            bulb_radius: format!("{:.2}", bulb_radius),
+            bulb_fill_radius: format!("{:.2}", bulb_radius - 3.0),
+            percentage_markers: percentage_markers.clone(),
+            text_x: format!("{:.2}", text_x),
+            achieved_y: format!("{:.2}", achieved_y),
+            achieved_amount: format!("{:.2}", total_raised),
+            achieved_label_y: format!("{:.2}", achieved_y + width as f64 * 0.03),
+            goal_y: format!("{:.2}", goal_y),
+            goal_amount: format!("{:.2}", config.goal),
+            goal_label_y: format!("{:.2}", goal_y + width as f64 * 0.03),
+            percent_y: format!("{:.2}", percent_y),
+            progress_percent: format!("{:.0}", progress_percent),
+            percent_label_y: format!("{:.2}", percent_y + width as f64 * 0.025),
+            amount_font_size: format!("{:.2}", width as f64 * 0.06),
+            label_font_size: format!("{:.2}", width as f64 * 0.025),
+            percent_font_size: format!("{:.2}", width as f64 * 0.09),
+            percent_label_font_size: format!("{:.2}", width as f64 * 0.022),
+        };
 
-    template.render().unwrap_or_else(|e| {
-        eprintln!("Failed to render thermometer template: {}", e);
-        String::from("<svg><text>Error rendering thermometer</text></svg>")
-    })
+        template.render().unwrap_or_else(|e| {
+            eprintln!("Failed to render thermometer template: {}", e);
+            String::from("<svg><text>Error rendering thermometer</text></svg>")
+        })
+    } else {
+        let template = ThermometerLightTemplate {
+            width,
+            height,
+            title_x: format!("{:.2}", width as f64 / 2.0),
+            title_y: format!("{:.2}", title_y),
+            title_font_size: format!("{:.2}", width as f64 * 0.035),
+            tube_x: format!("{:.2}", tube_x),
+            tube_y: format!("{:.2}", tube_y),
+            tube_width: format!("{:.2}", tube_width),
+            tube_height: format!("{:.2}", tube_height),
+            fill_x: format!("{:.2}", tube_x + 2.5),
+            fill_y: format!("{:.2}", fill_y),
+            fill_width: format!("{:.2}", tube_width - 5.0),
+            fill_height: format!("{:.2}", fill_height),
+            bulb_center_x: format!("{:.2}", bulb_center_x),
+            bulb_center_y: format!("{:.2}", bulb_center_y),
+            bulb_radius: format!("{:.2}", bulb_radius),
+            bulb_fill_radius: format!("{:.2}", bulb_radius - 3.0),
+            percentage_markers,
+            text_x: format!("{:.2}", text_x),
+            achieved_y: format!("{:.2}", achieved_y),
+            achieved_amount: format!("{:.2}", total_raised),
+            achieved_label_y: format!("{:.2}", achieved_y + width as f64 * 0.03),
+            goal_y: format!("{:.2}", goal_y),
+            goal_amount: format!("{:.2}", config.goal),
+            goal_label_y: format!("{:.2}", goal_y + width as f64 * 0.03),
+            percent_y: format!("{:.2}", percent_y),
+            progress_percent: format!("{:.0}", progress_percent),
+            percent_label_y: format!("{:.2}", percent_y + width as f64 * 0.025),
+            amount_font_size: format!("{:.2}", width as f64 * 0.06),
+            label_font_size: format!("{:.2}", width as f64 * 0.025),
+            percent_font_size: format!("{:.2}", width as f64 * 0.09),
+            percent_label_font_size: format!("{:.2}", width as f64 * 0.022),
+        };
+
+        template.render().unwrap_or_else(|e| {
+            eprintln!("Failed to render thermometer template: {}", e);
+            String::from("<svg><text>Error rendering thermometer</text></svg>")
+        })
+    }
 }
 
 /// Convert SVG to PNG with the specified scale

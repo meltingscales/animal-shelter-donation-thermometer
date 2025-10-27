@@ -17,10 +17,32 @@
 <div class="thermometer-section">
     <h2>Donation Progress</h2>
     <div class="thermometer-container">
-        <img src="/thermometer.svg" alt="Donation Thermometer" class="thermometer-image">
+        <img src="/thermometer-light.svg" alt="Donation Thermometer" class="thermometer-image" id="thermometer-img">
     </div>
     <p class="last-updated">Last updated: {{ last_updated }}</p>
 </div>
+
+<script>
+// Function to update thermometer image based on color scheme
+function updateThermometerImage() {
+    const img = document.getElementById('thermometer-img');
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (isDarkMode) {
+        img.src = '/thermometer-dark.svg';
+    } else {
+        img.src = '/thermometer-light.svg';
+    }
+}
+
+// Update on page load
+updateThermometerImage();
+
+// Listen for color scheme changes
+if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThermometerImage);
+}
+</script>
 
 <div class="stats-section">
     <h2>Current Status</h2>
@@ -69,8 +91,13 @@
 <div class="embed-section">
     <h2>Embed This Thermometer</h2>
     <p>Use the following code to embed this thermometer on your website:</p>
+    <p><strong>Light Mode (default):</strong></p>
     <div class="code-box">
-        <code>&lt;img src="{{ base_url }}/thermometer.png" alt="Donation Thermometer" /&gt;</code>
+        <code>&lt;img src="{{ base_url }}/thermometer-light.png" alt="Donation Thermometer" /&gt;</code>
+    </div>
+    <p><strong>Dark Mode:</strong></p>
+    <div class="code-box">
+        <code>&lt;img src="{{ base_url }}/thermometer-dark.png" alt="Donation Thermometer" /&gt;</code>
     </div>
     <p class="note">The image updates automatically as donations are recorded.</p>
 </div>
