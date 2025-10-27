@@ -68,11 +68,10 @@
 }
 
 /* ============================================
-   DARK MODE - SYSTEM PREFERENCE
+   DARK MODE - MANUAL TOGGLE
    ============================================ */
 
-@media (prefers-color-scheme: dark) {
-    :root {
+[data-theme="dark"] {
         /* Primary colors - slightly lighter for better visibility */
         --primary-color: #4d9aff;
         --primary-hover: #66a3ff;
@@ -130,7 +129,6 @@
 
         /* Shadow */
         --shadow: rgba(0, 0, 0, 0.3);
-    }
 }
 
 /* ============================================
@@ -192,6 +190,65 @@ body {
 
 .navbar-menu a:hover {
     background-color: var(--navbar-hover);
+}
+
+/* Mobile navbar toggle button */
+.navbar-toggle {
+    display: none;
+    flex-direction: column;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    margin-left: auto;
+}
+
+.navbar-toggle-icon {
+    width: 25px;
+    height: 3px;
+    background-color: var(--navbar-text);
+    margin: 3px 0;
+    transition: 0.3s;
+}
+
+.navbar-toggle.active .navbar-toggle-icon:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.navbar-toggle.active .navbar-toggle-icon:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar-toggle.active .navbar-toggle-icon:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+
+/* Theme toggle button */
+.theme-toggle-item {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    color: var(--navbar-text);
+    cursor: pointer;
+    font-size: 1.5em;
+    padding: 8px 15px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle:hover {
+    background-color: var(--navbar-hover);
+}
+
+.theme-toggle-icon {
+    display: block;
 }
 
 /* Container */
@@ -418,6 +475,85 @@ tr:hover {
     margin-top: 5px;
 }
 
+.stat-box-highlight {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 15px var(--shadow);
+}
+
+/* Progress Bar Styles */
+.progress-bar-container {
+    margin: 30px 0;
+    padding: 0;
+}
+
+.progress-bar-wrapper {
+    width: 100%;
+    height: 50px;
+    background-color: var(--bg-secondary);
+    border-radius: 25px;
+    border: 2px solid var(--border-color);
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 5px var(--shadow);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #DC143C 0%, #FF6B6B 100%);
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 15px;
+    transition: width 1s ease-in-out;
+    position: relative;
+    min-width: 0;
+}
+
+.progress-bar-fill::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.progress-bar-text {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--text-primary);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    position: relative;
+}
+
+.progress-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
 .teams-section {
     margin: 30px 0;
 }
@@ -606,28 +742,46 @@ button:disabled {
 /* Base Layout - Mobile (max-width: 768px) */
 @media (max-width: 768px) {
     .navbar-container {
-        flex-direction: column;
-        align-items: stretch;
+        flex-wrap: wrap;
+        position: relative;
     }
 
     .navbar-brand {
-        text-align: center;
+        flex: 1;
         font-size: 1em;
         padding: 12px 15px;
     }
 
+    .navbar-toggle {
+        display: flex;
+        order: 2;
+    }
+
     .navbar-menu {
+        display: none;
         flex-direction: column;
         width: 100%;
+        order: 3;
+    }
+
+    .navbar-menu.active {
+        display: flex;
     }
 
     .navbar-menu li {
         border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .navbar-menu a {
+    .navbar-menu a,
+    .theme-toggle {
         padding: 12px 20px;
         text-align: center;
+        width: 100%;
+    }
+
+    .theme-toggle-item {
+        margin-left: 0;
+        width: 100%;
     }
 
     .container {

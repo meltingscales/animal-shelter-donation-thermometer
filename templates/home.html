@@ -22,30 +22,22 @@
     <p class="last-updated">Last updated: {{ last_updated }}</p>
 </div>
 
-<script>
-// Function to update thermometer image based on color scheme
-function updateThermometerImage() {
-    const img = document.getElementById('thermometer-img');
-    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    if (isDarkMode) {
-        img.src = '/thermometer-dark.svg';
-    } else {
-        img.src = '/thermometer-light.svg';
-    }
-}
-
-// Update on page load
-updateThermometerImage();
-
-// Listen for color scheme changes
-if (window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateThermometerImage);
-}
-</script>
-
 <div class="stats-section">
     <h2>Current Status</h2>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-container">
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar-fill" style="width: {{ progress_percent_raw }}%">
+                <span class="progress-bar-text">{{ progress_percent }}%</span>
+            </div>
+        </div>
+        <div class="progress-bar-labels">
+            <span>${{ total_raised }} raised</span>
+            <span>${{ goal }} goal</span>
+        </div>
+    </div>
+
     <div class="stats">
         <div class="stat-box">
             <div class="stat-number">${{ total_raised }}</div>
@@ -55,7 +47,7 @@ if (window.matchMedia) {
             <div class="stat-number">${{ goal }}</div>
             <div class="stat-label">Goal</div>
         </div>
-        <div class="stat-box">
+        <div class="stat-box stat-box-highlight">
             <div class="stat-number">{{ progress_percent }}%</div>
             <div class="stat-label">Progress</div>
         </div>

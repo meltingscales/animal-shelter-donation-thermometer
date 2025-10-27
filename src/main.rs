@@ -1,5 +1,6 @@
 mod storage;
 mod thermometer;
+mod color_constants;
 
 use askama::Template;
 use axum::{
@@ -88,9 +89,10 @@ struct HomeTemplate {
     organization_name: String,
     title: String,
     last_updated: String,
-    total_raised: f64,
-    goal: f64,
-    progress_percent: f64,
+    total_raised: String,
+    goal: String,
+    progress_percent: String,
+    progress_percent_raw: f64,  // For the progress bar width
     team_count: usize,
     teams: Vec<Team>,
     base_url: String,
@@ -235,7 +237,8 @@ async fn home_page(State(state): State<AppState>) -> Result<HomeTemplate, Status
 
     let total_raised: f64 = config.teams.iter().map(|t| t.total_raised).sum();
     let progress_percent = if config.goal > 0.0 {
-        (total_raised / config.goal * 100.0).min(100.0)
+        let raw_percent = (total_raised / config.goal * 100.0).min(100.0);
+        (raw_percent * 100.0).round() / 100.0  // Round to 2 decimal places
     } else {
         0.0
     };
@@ -247,9 +250,10 @@ async fn home_page(State(state): State<AppState>) -> Result<HomeTemplate, Status
         organization_name: config.organization_name.clone(),
         title: config.title.clone(),
         last_updated: config.last_updated.clone(),
-        total_raised,
-        goal: config.goal,
-        progress_percent,
+        total_raised: format!("{:.2}", total_raised),
+        goal: format!("{:.2}", config.goal),
+        progress_percent: format!("{:.2}", progress_percent),
+        progress_percent_raw: progress_percent,
         team_count: config.teams.len(),
         teams: config.teams.clone(),
         base_url,

@@ -15,11 +15,21 @@
                 <a href="/" class="navbar-brand"
                     >Animal Shelter Donation Thermometer</a
                 >
-                <ul class="navbar-menu">
+                <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                    <span class="navbar-toggle-icon"></span>
+                    <span class="navbar-toggle-icon"></span>
+                    <span class="navbar-toggle-icon"></span>
+                </button>
+                <ul class="navbar-menu" id="navbar-menu">
                     <li><a href="/">Home</a></li>
                     <li><a href="/faq">FAQ</a></li>
                     <li><a href="/admin">Admin Portal</a></li>
                     <li><a href="/openapi">OpenAPI</a></li>
+                    <li class="theme-toggle-item">
+                        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                            <span class="theme-toggle-icon">🌙</span>
+                        </button>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -35,5 +45,73 @@
                 >
             </p>
         </div>
+        <script>
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = themeToggle.querySelector('.theme-toggle-icon');
+            const html = document.documentElement;
+
+            // Determine initial theme: saved preference > system preference > light
+            function getInitialTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    return savedTheme;
+                }
+                // Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    return 'dark';
+                }
+                return 'light';
+            }
+
+            const initialTheme = getInitialTheme();
+            html.setAttribute('data-theme', initialTheme);
+            updateThemeIcon(initialTheme);
+            updateThermometerImage(initialTheme);
+
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+                updateThermometerImage(newTheme);
+            });
+
+            function updateThemeIcon(theme) {
+                themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+
+            function updateThermometerImage(theme) {
+                // Update thermometer image if on home page
+                const thermometerImg = document.getElementById('thermometer-img');
+                if (thermometerImg) {
+                    thermometerImg.src = theme === 'dark' ? '/thermometer-dark.svg' : '/thermometer-light.svg';
+                }
+            }
+
+            // Listen for system theme changes (only if no manual preference is set)
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    // Only apply system theme if user hasn't manually set a preference
+                    if (!localStorage.getItem('theme')) {
+                        const newTheme = e.matches ? 'dark' : 'light';
+                        html.setAttribute('data-theme', newTheme);
+                        updateThemeIcon(newTheme);
+                        updateThermometerImage(newTheme);
+                    }
+                });
+            }
+
+            // Mobile navbar toggle
+            const navbarToggle = document.getElementById('navbar-toggle');
+            const navbarMenu = document.getElementById('navbar-menu');
+
+            navbarToggle.addEventListener('click', () => {
+                navbarMenu.classList.toggle('active');
+                navbarToggle.classList.toggle('active');
+            });
+        </script>
     </body>
 </html>
