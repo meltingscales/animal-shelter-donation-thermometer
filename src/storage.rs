@@ -62,7 +62,11 @@ impl ConfigStorage for FirestoreStorage {
             .obj()
             .one(CONFIG_DOC_ID)
             .await
-            .map_err(|e| StorageError::Firestore(format!("Failed to read from Firestore: {}", e)))?;
+            .map_err(|e| {
+                let err = StorageError::Firestore(format!("Failed to read from Firestore: {}", e));
+                tracing::error!("Failed to load config: {}", err);
+                err
+            })?;
 
         match result {
             Some(config) => {
@@ -70,10 +74,13 @@ impl ConfigStorage for FirestoreStorage {
                 Ok(config)
             }
             None => {
-                tracing::debug!("No config found in Firestore, returning default");
+                tracing::info!("No config found in Firestore, creating default config");
                 // If no config exists, return default and save it
                 let default_config = ThermometerConfig::default();
-                self.save_config(&default_config).await?;
+                if let Err(e) = self.save_config(&default_config).await {
+                    tracing::error!("Failed to save default config: {}", e);
+                    return Err(e);
+                }
                 Ok(default_config)
             }
         }
@@ -90,9 +97,13 @@ impl ConfigStorage for FirestoreStorage {
             .object(config)
             .execute::<()>()
             .await
-            .map_err(|e| StorageError::Firestore(format!("Failed to write to Firestore: {}", e)))?;
+            .map_err(|e| {
+                let err = StorageError::Firestore(format!("Failed to write to Firestore: {}", e));
+                tracing::error!("Failed to save config: {}", err);
+                err
+            })?;
 
-        tracing::debug!("Config saved successfully to Firestore");
+        tracing::info!("Config saved successfully to Firestore");
         Ok(())
     }
 }
