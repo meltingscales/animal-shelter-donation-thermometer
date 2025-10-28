@@ -1,5 +1,6 @@
 use askama::Template;
 use crate::ThermometerConfig;
+use crate::color_constants;
 
 #[derive(Template)]
 #[template(path = "thermometer-light.svg")]
@@ -36,6 +37,18 @@ struct ThermometerLightTemplate {
     label_font_size: String,
     percent_font_size: String,
     percent_label_font_size: String,
+    // Color constants
+    background_color: &'static str,
+    title_text_color: &'static str,
+    text_primary_color: &'static str,
+    text_secondary_color: &'static str,
+    tube_fill_color: &'static str,
+    tube_stroke_color: &'static str,
+    fill_color_1: &'static str,
+    fill_color_2: &'static str,
+    achieved_text_color: &'static str,
+    marker_stroke_color: &'static str,
+    marker_text_color: &'static str,
 }
 
 #[derive(Template)]
@@ -73,6 +86,18 @@ struct ThermometerDarkTemplate {
     label_font_size: String,
     percent_font_size: String,
     percent_label_font_size: String,
+    // Color constants
+    background_color: &'static str,
+    title_text_color: &'static str,
+    text_primary_color: &'static str,
+    text_secondary_color: &'static str,
+    tube_fill_color: &'static str,
+    tube_stroke_color: &'static str,
+    fill_color_1: &'static str,
+    fill_color_2: &'static str,
+    achieved_text_color: &'static str,
+    marker_stroke_color: &'static str,
+    marker_text_color: &'static str,
 }
 
 #[derive(Debug, Clone)]
@@ -180,6 +205,18 @@ pub fn generate_thermometer_svg(config: &ThermometerConfig, width: u32, dark_mod
             label_font_size: format!("{:.2}", width as f64 * 0.025),
             percent_font_size: format!("{:.2}", width as f64 * 0.09),
             percent_label_font_size: format!("{:.2}", width as f64 * 0.022),
+            // Color constants
+            background_color: color_constants::dark::BACKGROUND,
+            title_text_color: color_constants::dark::TITLE_TEXT,
+            text_primary_color: color_constants::dark::TEXT_PRIMARY,
+            text_secondary_color: color_constants::dark::TEXT_SECONDARY,
+            tube_fill_color: color_constants::dark::TUBE_FILL,
+            tube_stroke_color: color_constants::dark::TUBE_STROKE,
+            fill_color_1: color_constants::dark::FILL_COLOR_1,
+            fill_color_2: color_constants::dark::FILL_COLOR_2,
+            achieved_text_color: color_constants::dark::ACHIEVED_TEXT,
+            marker_stroke_color: color_constants::dark::MARKER_STROKE,
+            marker_text_color: color_constants::dark::MARKER_TEXT,
         };
 
         template.render().unwrap_or_else(|e| {
@@ -220,6 +257,18 @@ pub fn generate_thermometer_svg(config: &ThermometerConfig, width: u32, dark_mod
             label_font_size: format!("{:.2}", width as f64 * 0.025),
             percent_font_size: format!("{:.2}", width as f64 * 0.09),
             percent_label_font_size: format!("{:.2}", width as f64 * 0.022),
+            // Color constants
+            background_color: color_constants::light::BACKGROUND,
+            title_text_color: color_constants::light::TITLE_TEXT,
+            text_primary_color: color_constants::light::TEXT_PRIMARY,
+            text_secondary_color: color_constants::light::TEXT_SECONDARY,
+            tube_fill_color: color_constants::light::TUBE_FILL,
+            tube_stroke_color: color_constants::light::TUBE_STROKE,
+            fill_color_1: color_constants::light::FILL_COLOR_1,
+            fill_color_2: color_constants::light::FILL_COLOR_2,
+            achieved_text_color: color_constants::light::ACHIEVED_TEXT,
+            marker_stroke_color: color_constants::light::MARKER_STROKE,
+            marker_text_color: color_constants::light::MARKER_TEXT,
         };
 
         template.render().unwrap_or_else(|e| {
