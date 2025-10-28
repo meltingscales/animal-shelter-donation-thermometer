@@ -231,7 +231,10 @@ async fn shutdown_signal() {
     }
 }
 
-async fn home_page(State(state): State<AppState>) -> Result<HomeTemplate, StatusCode> {
+async fn home_page(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<HomeTemplate, StatusCode> {
     let config = state.storage.load_config().await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
@@ -243,8 +246,19 @@ async fn home_page(State(state): State<AppState>) -> Result<HomeTemplate, Status
         0.0
     };
 
-    // Get base URL from environment or use default
-    let base_url = std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:8080".to_string());
+    // Build base URL from request headers
+    let host = headers
+        .get("host")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("localhost:8080");
+
+    // Check if we're behind a proxy (Cloud Run sets X-Forwarded-Proto)
+    let proto = headers
+        .get("x-forwarded-proto")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("http");
+
+    let base_url = format!("{}://{}", proto, host);
 
     Ok(HomeTemplate {
         organization_name: config.organization_name.clone(),
