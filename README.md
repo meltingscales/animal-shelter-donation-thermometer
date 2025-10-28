@@ -1,5 +1,7 @@
 # Animal Shelter Donation Thermometer
 
+https://animal-shelter-donation-thermometer-163012697625.us-central1.run.app/faq
+
 A simple, embeddable donation progress thermometer for animal shelter fundraising campaigns with a user-friendly web interface. Track team donations in real-time with a visual thermometer image.
 
 ## Features
