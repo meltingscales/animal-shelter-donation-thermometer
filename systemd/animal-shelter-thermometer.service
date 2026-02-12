@@ -1,0 +1,16 @@
+[Unit]
+Description=Animal Shelter Donation Thermometer Service
+After=network.target
+
+[Service]
+Type=simple
+User=USER_PLACEHOLDER
+WorkingDirectory=REPO_DIR_PLACEHOLDER
+Environment="PORT=3002"
+Environment="RUST_LOG=info"
+ExecStart=REPO_DIR_PLACEHOLDER/target/release/animal-shelter-donation-thermometer
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
